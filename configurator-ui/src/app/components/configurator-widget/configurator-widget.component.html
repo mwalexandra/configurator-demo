@@ -13,6 +13,8 @@
   <p *ngIf="loading">Loading...</p>
   <p *ngIf="error" class="error">{{ error }}</p>
 
+  <pre *ngIf="response">{{ response | json }}</pre>
+
   <ng-container *ngIf="response as config">
     <div class="summary">
       <p><strong>Configuration ID:</strong> {{ config.configurationId }}</p>

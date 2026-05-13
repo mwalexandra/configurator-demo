@@ -72,9 +72,9 @@ export class ConfiguratorWidgetComponent implements OnInit {
         this.loading = false;
       },
       error: (err) => {
-        this.error = 'Update request failed';
-        console.error(err);
+        this.error = 'Init failed: ' + err.message;
         this.loading = false;
+        console.error(err);
       }
     });
   }
