@@ -1,0 +1,49 @@
+<div class="widget">
+  <h1>Product Configurator</h1>
+
+  <div class="actions">
+    <button type="button" (click)="init()" [disabled]="loading">
+      Reinitialize
+    </button>
+    <button type="button" (click)="update()" [disabled]="loading || !response">
+      Update
+    </button>
+  </div>
+
+  <p *ngIf="loading">Loading...</p>
+  <p *ngIf="error" class="error">{{ error }}</p>
+
+  <ng-container *ngIf="response as config">
+    <div class="summary">
+      <p><strong>Configuration ID:</strong> {{ config.configurationId }}</p>
+      <p><strong>Product:</strong> {{ config.productId }}</p>
+      <p><strong>Price:</strong> {{ config.price.amount }} {{ config.price.currency }}</p>
+      <p><strong>Complete:</strong> {{ config.complete }}</p>
+    </div>
+
+    <div class="attributes">
+      <div class="attribute" *ngFor="let attr of config.attributes; trackBy: trackByAttribute">
+        <label [for]="attr.name">{{ attr.label }}</label>
+
+        <select
+          [id]="attr.name"
+          [ngModel]="selections[attr.name]"
+          (ngModelChange)="onSelectionChange(attr.name, $event)"
+        >
+          <option
+            *ngFor="let val of attr.values"
+            [ngValue]="val.value"
+            [disabled]="!val.selectable"
+          >
+            {{ val.label }}
+          </option>
+        </select>
+      </div>
+    </div>
+
+    <details>
+      <summary>Debug JSON</summary>
+      <pre>{{ config | json }}</pre>
+    </details>
+  </ng-container>
+</div>

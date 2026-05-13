@@ -75,7 +75,13 @@
               "buildTarget": "configurator-ui:build:development"
             }
           },
-          "defaultConfiguration": "development"
+          "defaultConfiguration": "development",
+          "options": {
+            "allowedHosts": [
+              ".app.github.dev",
+              "localhost"
+            ]
+          }
         },
         "test": {
           "builder": "@angular/build:unit-test"
