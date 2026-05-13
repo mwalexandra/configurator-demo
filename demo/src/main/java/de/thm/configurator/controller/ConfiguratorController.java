@@ -1,5 +1,6 @@
 package de.thm.configurator.controller;
 
+import de.thm.configurator.sap.SapVcpClient;
 import de.thm.configurator.dto.ConfiguratorResponse;
 import de.thm.configurator.dto.InitConfigurationRequest;
 import de.thm.configurator.dto.UpdateConfigurationRequest;
@@ -12,14 +13,21 @@ import org.springframework.web.bind.annotation.*;
 public class ConfiguratorController {
 
     private final ConfiguratorService configuratorService;
+    private final SapVcpClient sapVcpClient;
 
-    public ConfiguratorController(ConfiguratorService configuratorService) {
+    public ConfiguratorController(ConfiguratorService configuratorService, SapVcpClient sapVcpClient) {
         this.configuratorService = configuratorService;
+        this.sapVcpClient = sapVcpClient;
     }
 
     @GetMapping("/health")
     public String health() {
         return "OK";
+    }
+
+    @GetMapping("/sap/test")
+    public String testSapConnection(@RequestParam String path) {
+        return sapVcpClient.testConnection(path);
     }
 
     @PostMapping("/configurations/init")
