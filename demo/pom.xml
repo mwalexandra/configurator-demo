@@ -8,7 +8,7 @@
 		<version>4.0.6</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
-	<groupId>com.example</groupId>
+	<groupId>de.thm.configurator</groupId>
 	<artifactId>demo</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>demo</name>
@@ -129,13 +129,13 @@
 						<goal>generate</goal>
 					</goals>
 					<configuration>
-						<inputSpec>${project.basedir}/src/main/resources/openapi.yaml</inputSpec>
+						<inputSpec>${project.basedir}/src/main/resources/api/openapi.yaml</inputSpec>
 						<generatorName>spring</generatorName>
 						<library>spring-boot</library>
 
-						<apiPackage>com.example.configurator.api</apiPackage>
-						<modelPackage>com.example.configurator.model</modelPackage>
-						<invokerPackage>com.example.configurator.invoker</invokerPackage>
+						<apiPackage>de.thm.configurator.configurator.api</apiPackage>
+						<modelPackage>de.thm.configurator.configurator.model</modelPackage>
+						<invokerPackage>de.thm.configurator.configurator.invoker</invokerPackage>
 
 						<output>${project.build.directory}/generated-sources/openapi</output>
 

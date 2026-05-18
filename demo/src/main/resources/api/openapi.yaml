@@ -6,6 +6,8 @@ info:
 paths:
   /configurations/init:
     post:
+      tags:
+        - Configurator
       operationId: initConfiguration
       requestBody:
         required: true
@@ -23,6 +25,8 @@ paths:
 
   /configurations/update:
     post:
+      tags:
+        - Configurator
       operationId: updateConfiguration
       requestBody:
         required: true
