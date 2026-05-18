@@ -1,0 +1,138 @@
+openapi: 3.0.3
+info:
+  title: Configurator API
+  version: 1.0.0
+
+paths:
+  /configurations/init:
+    post:
+      operationId: initConfiguration
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InitConfigurationRequest'
+      responses:
+        '200':
+          description: Initial configuration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConfiguratorResponse'
+
+  /configurations/update:
+    post:
+      operationId: updateConfiguration
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateConfigurationRequest'
+      responses:
+        '200':
+          description: Updated configuration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConfiguratorResponse'
+
+components:
+  schemas:
+    InitConfigurationRequest:
+      type: object
+      required:
+        - productId
+        - kbId
+        - locale
+      properties:
+        productId:
+          type: string
+        kbId:
+          type: string
+        locale:
+          type: string
+        selections:
+          type: object
+          additionalProperties:
+            type: string
+
+    UpdateConfigurationRequest:
+      type: object
+      required:
+        - configurationId
+      properties:
+        configurationId:
+          type: string
+        selections:
+          type: object
+          additionalProperties:
+            type: string
+
+    ConfiguratorResponse:
+      type: object
+      required:
+        - configurationId
+        - productId
+        - complete
+        - price
+        - attributes
+      properties:
+        configurationId:
+          type: string
+        productId:
+          type: string
+        complete:
+          type: boolean
+        price:
+          $ref: '#/components/schemas/Price'
+        attributes:
+          type: array
+          items:
+            $ref: '#/components/schemas/Attribute'
+
+    Price:
+      type: object
+      required:
+        - amount
+        - currency
+      properties:
+        amount:
+          type: number
+          format: double
+        currency:
+          type: string
+
+    Attribute:
+      type: object
+      required:
+        - name
+        - label
+        - values
+      properties:
+        name:
+          type: string
+        label:
+          type: string
+        values:
+          type: array
+          items:
+            $ref: '#/components/schemas/AttributeValue'
+
+    AttributeValue:
+      type: object
+      required:
+        - value
+        - label
+        - selectable
+        - selected
+      properties:
+        value:
+          type: string
+        label:
+          type: string
+        selectable:
+          type: boolean
+        selected:
+          type: boolean
