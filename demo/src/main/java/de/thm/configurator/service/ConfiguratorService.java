@@ -21,16 +21,25 @@ public class ConfiguratorService {
 
     public ConfiguratorResponse initConfiguration(InitConfigurationRequest request) {
         System.out.println(">>> initConfiguration called, productId=" + request.productId());
-        
-        JsonNode sapResponse = sapVcpClient.createConfiguration();
-        System.out.println("SAP RAW RESPONSE: " + sapResponse.toPrettyString());
-        return sapMappingService.mapToConfiguratorResponse(sapResponse);
+
+        try {
+            String sapResponse = sapVcpClient.createConfiguration();
+            System.out.println("SAP RAW: " + sapResponse);
+            return sapMappingService.mapToConfiguratorResponse(sapResponse);
+        } catch (Exception e) {
+            System.out.println("SAP ERROR: " + e.getMessage());
+            e.printStackTrace();
+            throw e;
+        }
     }
 
     public ConfiguratorResponse updateConfiguration(UpdateConfigurationRequest request) {
-        // для PoC пока тоже создаём новую конфигурацию
-        // позже здесь будет PATCH /configurations/{id}
-        JsonNode sapResponse = sapVcpClient.createConfiguration();
-        return sapMappingService.mapToConfiguratorResponse(sapResponse);
+        try {
+            String sapResponse = sapVcpClient.createConfiguration();
+            return sapMappingService.mapToConfiguratorResponse(sapResponse);
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw e;
+        }
     }
 }

@@ -1,6 +1,8 @@
 package de.thm.configurator.sap;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import de.thm.configurator.dto.ConfiguratorResponse;
 import org.springframework.stereotype.Service;
 
@@ -11,57 +13,77 @@ import java.util.List;
 @Service
 public class SapMappingService {
 
-    public ConfiguratorResponse mapToConfiguratorResponse(JsonNode sapResponse) {
-        String configId = sapResponse.path("id").asText("unknown");
-        String productKey = sapResponse.path("productKey").asText("UNKNOWN");
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
-        List<ConfiguratorResponse.AttributeDto> attributes = new ArrayList<>();
+    public ConfiguratorResponse mapToConfiguratorResponse(String sapJson) {
+        try {
+            JsonNode sapResponse = objectMapper.readTree(sapJson);
 
-        JsonNode items = sapResponse.path("cstics");
-        if (items.isArray()) {
-            for (JsonNode cstic : items) {
-                String name = cstic.path("name").asText();
-                String label = cstic.path("langdepname").asText(name);
+            String configId = sapResponse.path("id").asText("unknown");
+            String productKey = sapResponse.path("productKey").asText("UNKNOWN");
 
-                List<ConfiguratorResponse.ValueDto> values = new ArrayList<>();
-                JsonNode domainValues = cstic.path("domainvalues");
+            List<ConfiguratorResponse.AttributeDto> attributes = new ArrayList<>();
 
-                if (domainValues.isArray()) {
+            JsonNode cstics = sapResponse.path("cstics");
+            if (cstics.isArray()) {
+                for (JsonNode cstic : cstics) {
+                    String name = cstic.path("name").asText();
+                    String label = cstic.path("langdepname").asText(name);
                     String selectedValue = cstic.path("value").asText("");
-                    for (JsonNode dv : domainValues) {
-                        String val = dv.path("key").asText();
-                        String valLabel = dv.path("langdepname").asText(val);
-                        boolean selectable = !dv.path("selectable").asBoolean(true) == false;
-                        boolean selected = val.equals(selectedValue);
-                        values.add(new ConfiguratorResponse.ValueDto(val, valLabel, selectable, selected));
+
+                    List<ConfiguratorResponse.ValueDto> values = new ArrayList<>();
+                    JsonNode domainValues = cstic.path("domainvalues");
+
+                    if (domainValues.isArray()) {
+                        for (JsonNode dv : domainValues) {
+                            String val = dv.path("key").asText();
+                            String valLabel = dv.path("langdepname").asText(val);
+                            boolean selectable = dv.path("selectable").asBoolean(true);
+                            boolean selected = val.equals(selectedValue);
+                            values.add(new ConfiguratorResponse.ValueDto(val, valLabel, selectable, selected));
+                        }
                     }
+                    attributes.add(new ConfiguratorResponse.AttributeDto(name, label, values));
                 }
-
-                attributes.add(new ConfiguratorResponse.AttributeDto(name, label, values));
             }
+
+            if (attributes.isEmpty()) {
+                attributes = fallbackAttributes(configId);
+            }
+
+            boolean complete = sapResponse.path("complete").asBoolean(false);
+
+            return new ConfiguratorResponse(
+                    configId, productKey, attributes,
+                    new ConfiguratorResponse.PriceDto(new BigDecimal("0.00"), "EUR"),
+                    complete
+            );
+
+        } catch (JsonProcessingException e) {
+            System.out.println("JSON parse error: " + e.getMessage());
+            return errorResponse(sapJson);
         }
-
-        // Если SAP не вернул характеристики — показываем fallback
-        if (attributes.isEmpty()) {
-            attributes = fallbackAttributes();
-        }
-
-        ConfiguratorResponse.PriceDto price = new ConfiguratorResponse.PriceDto(
-                new BigDecimal("0.00"), "EUR"
-        );
-
-        boolean complete = sapResponse.path("complete").asBoolean(false);
-
-        return new ConfiguratorResponse(configId, productKey, attributes, price, complete);
     }
 
-    private List<ConfiguratorResponse.AttributeDto> fallbackAttributes() {
+    private List<ConfiguratorResponse.AttributeDto> fallbackAttributes(String configId) {
         return List.of(
                 new ConfiguratorResponse.AttributeDto(
-                        "INFO", "SAP Response",
+                        "SAP_ID", "SAP Configuration ID",
                         List.of(new ConfiguratorResponse.ValueDto(
-                                "CONNECTED", "Connected to SAP Sandbox", true, true))
+                                configId, configId, true, true))
                 )
+        );
+    }
+
+    private ConfiguratorResponse errorResponse(String raw) {
+        return new ConfiguratorResponse(
+                "error", "ERROR",
+                List.of(new ConfiguratorResponse.AttributeDto(
+                        "ERROR", "Parse Error",
+                        List.of(new ConfiguratorResponse.ValueDto(raw, raw, false, true))
+                )),
+                new ConfiguratorResponse.PriceDto(BigDecimal.ZERO, "EUR"),
+                false
         );
     }
 }

@@ -1,6 +1,5 @@
 package de.thm.configurator.sap;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -29,7 +28,7 @@ public class SapVcpClient {
         this.webClient = webClient;
     }
 
-    public JsonNode createConfiguration() {
+    public String createConfiguration() {
         Map<String, Object> body = Map.of(
             "context", List.of(Map.of("name", "VBAP-VRKME", "value", "EA")),
             "date", "2018-08-09",
@@ -49,7 +48,7 @@ public class SapVcpClient {
                 .header("Accept", "application/json")
                 .bodyValue(body)
                 .retrieve()
-                .bodyToMono(JsonNode.class)
+                .bodyToMono(String.class)
                 .block();
     }
 
