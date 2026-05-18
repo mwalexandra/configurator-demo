@@ -1,10 +1,7 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import {
-  ConfiguratorApiService,
-  ConfiguratorResponse
-} from '../../services/configurator-api.service';
+import { ConfiguratorApiService } from '../../services/configurator-api.service';
 
 @Component({
   selector: 'app-configurator-widget',
@@ -13,25 +10,19 @@ import {
   templateUrl: './configurator-widget.component.html',
   styleUrl: './configurator-widget.component.scss'
 })
-export class ConfiguratorWidgetComponent implements OnInit {
+export class ConfiguratorWidgetComponent {
   private api = inject(ConfiguratorApiService);
 
-  response?: ConfiguratorResponse;
-  loading = false;
-  error = '';
+  loading = signal(false);
+  error = signal('');
+  debugResponse = signal('');
 
-  selections: Record<string, string> = {
-    COLOR: 'RED',
-    ENGINE: 'ELECTRIC'
-  };
-
-  ngOnInit(): void {
-    this.init();
-  }
+  selections: Record<string, string> = {};
 
   init(): void {
-    this.loading = true;
-    this.error = '';
+    console.log('init() start');
+    this.loading.set(true);
+    this.error.set('');
 
     this.api.initConfiguration({
       productId: 'DEMO_PRODUCT',
@@ -40,57 +31,15 @@ export class ConfiguratorWidgetComponent implements OnInit {
       selections: this.selections
     }).subscribe({
       next: (res) => {
-        this.response = res;
-        this.syncSelectionsFromResponse();
-        this.loading = false;
+        console.log('response arrived', res);
+        this.debugResponse.set(JSON.stringify(res, null, 2));
+        this.loading.set(false);
       },
       error: (err) => {
-        this.error = 'Init request failed';
         console.error(err);
-        this.loading = false;
+        this.error.set('Init failed');
+        this.loading.set(false);
       }
     });
-  }
-
-  onSelectionChange(attributeName: string, value: string): void {
-    this.selections[attributeName] = value;
-  }
-
-  update(): void {
-    if (!this.response?.configurationId) return;
-
-    this.loading = true;
-    this.error = '';
-
-    this.api.updateConfiguration({
-      configurationId: this.response.configurationId,
-      selections: this.selections
-    }).subscribe({
-      next: (res) => {
-        this.response = res;
-        this.syncSelectionsFromResponse();
-        this.loading = false;
-      },
-      error: (err) => {
-        this.error = 'Init failed: ' + err.message;
-        this.loading = false;
-        console.error(err);
-      }
-    });
-  }
-
-  trackByAttribute(_: number, item: any): string {
-    return item.name;
-  }
-
-  private syncSelectionsFromResponse(): void {
-    if (!this.response) return;
-
-    for (const attribute of this.response.attributes) {
-      const selected = attribute.values.find(v => v.selected);
-      if (selected) {
-        this.selections[attribute.name] = selected.value;
-      }
-    }
   }
 }
