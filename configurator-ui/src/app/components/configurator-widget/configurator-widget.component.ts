@@ -1,7 +1,10 @@
 import { Component, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ConfiguratorApiService } from '../../services/configurator-api.service';
+import {
+  ConfiguratorApiService,
+  ConfiguratorResponse
+} from '../../services/configurator-api.service';
 
 @Component({
   selector: 'app-configurator-widget',
@@ -15,12 +18,12 @@ export class ConfiguratorWidgetComponent {
 
   loading = signal(false);
   error = signal('');
+  response = signal<ConfiguratorResponse | null>(null);
   debugResponse = signal('');
 
   selections: Record<string, string> = {};
 
   init(): void {
-    console.log('init() start');
     this.loading.set(true);
     this.error.set('');
 
@@ -31,8 +34,9 @@ export class ConfiguratorWidgetComponent {
       selections: this.selections
     }).subscribe({
       next: (res) => {
-        console.log('response arrived', res);
+        this.response.set(res);
         this.debugResponse.set(JSON.stringify(res, null, 2));
+        this.syncSelectionsFromResponse(res);
         this.loading.set(false);
       },
       error: (err) => {
@@ -41,5 +45,43 @@ export class ConfiguratorWidgetComponent {
         this.loading.set(false);
       }
     });
+  }
+
+  update(): void {
+    const current = this.response();
+    if (!current?.configurationId) return;
+
+    this.loading.set(true);
+    this.error.set('');
+
+    this.api.updateConfiguration({
+      configurationId: current.configurationId,
+      selections: this.selections
+    }).subscribe({
+      next: (res) => {
+        this.response.set(res);
+        this.debugResponse.set(JSON.stringify(res, null, 2));
+        this.syncSelectionsFromResponse(res);
+        this.loading.set(false);
+      },
+      error: (err) => {
+        console.error(err);
+        this.error.set('Update failed');
+        this.loading.set(false);
+      }
+    });
+  }
+
+  onSelectionChange(attributeName: string, value: string): void {
+    this.selections[attributeName] = value;
+  }
+
+  private syncSelectionsFromResponse(res: ConfiguratorResponse): void {
+    for (const attr of res.attributes) {
+      const selected = attr.values.find(v => v.selected);
+      if (selected) {
+        this.selections[attr.name] = selected.value;
+      }
+    }
   }
 }
